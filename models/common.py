@@ -878,14 +878,16 @@ class AutoShape(nn.Module):
                 elif isinstance(im, Image.Image):  # PIL Image
                     im, f = np.asarray(exif_transpose(im)), getattr(im, "filename", f) or f
                 files.append(Path(f).with_suffix(".jpg").name)
-                if im.shape[0] < 5:  # image in CHW
-                    im = im.transpose((1, 2, 0))  # reverse dataloader .transpose(2, 0, 1)
-                im = im[..., :3] if im.ndim == 3 else cv2.cvtColor(im, cv2.COLOR_GRAY2BGR)  # enforce 3ch input
+                # if im.shape[0] < 5:  # image in CHW # TODO HL removed this manually!!
+                #     im = im.transpose((1, 2, 0))  # reverse dataloader .transpose(2, 0, 1)
+                im = im[..., :3] # if im.ndim == 3 else cv2.cvtColor(im, cv2.COLOR_GRAY2BGR)  # enforce 3ch input # TODO HL removed this manually!!
                 s = im.shape[:2]  # HWC
                 shape0.append(s)  # image shape
-                g = max(size) / max(s)  # gain
-                shape1.append([int(y * g) for y in s])
-                ims[i] = im if im.data.contiguous else np.ascontiguousarray(im)  # update
+                max_size = 640 # TODO HL did this manually - EXTREMELY HACKY!!. Used to be max(size)
+                max_s = 1280  # TODO HL did this manually - EXTREMELY HACKY!!. Used to be  max(s)
+                g = max_size / max_s  # gain # TODO HL did this manually
+                shape1.append([360, 640])  # TODO HL did this manually - EXTREMELY HACKY!!. Used to be shape1.append([int(y * g) for y in s])
+                ims[i] = im # TODO HL removed this manually if im.data.contiguous else np.ascontiguousarray(im)  # update
             shape1 = [make_divisible(x, self.stride) for x in np.array(shape1).max(0)]  # inf shape
             x = [letterbox(im, shape1, auto=False)[0] for im in ims]  # pad
             x = np.ascontiguousarray(np.array(x).transpose((0, 3, 1, 2)))  # stack and BHWC to BCHW
